@@ -18,6 +18,43 @@ export class APIError extends Error {
   }
 }
 
+// Lock to prevent concurrent refresh attempts
+let refreshPromise: Promise<boolean> | null = null
+
+/**
+ * Refresh session with lock to prevent concurrent attempts
+ */
+async function refreshSessionWithLock(): Promise<boolean> {
+  // If already refreshing, wait for that to complete
+  if (refreshPromise) {
+    return await refreshPromise
+  }
+
+  // Start refresh
+  const refreshTask = async (): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.refreshSession()
+      if (error) {
+        // If refresh token is already used or invalid, sign out
+        if (error.message.includes('Already Used') || error.message.includes('Invalid Refresh Token')) {
+          await supabase.auth.signOut()
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login'
+          }
+          return false
+        }
+        throw error
+      }
+      return data.session !== null
+    } finally {
+      refreshPromise = null
+    }
+  }
+
+  refreshPromise = refreshTask()
+  return await refreshPromise
+}
+
 /**
  * Client-side API request (automatically includes Supabase token)
  */
@@ -43,13 +80,12 @@ export async function apiRequest<T>(
 
   if (!response.ok) {
     if (response.status === 401) {
-      const { data } = await supabase.auth.refreshSession()
-      if (data.session) {
+      const refreshed = await refreshSessionWithLock()
+      if (refreshed) {
+        // Retry the request with new token
         return apiRequest<T>(endpoint, options)
       }
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login'
-      }
+      // Refresh failed, user will be redirected to login
       throw new APIError('Unauthorized', 401, 'Unauthorized')
     }
 
