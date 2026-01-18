@@ -65,8 +65,8 @@ export default function SettingsPage() {
       })
       // Refresh settings after disconnect using store
       await fetchSettings()
-    } catch (err: any) {
-      setError(err.message || 'Failed to disconnect Xero')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to disconnect Xero')
     } finally {
       setDisconnecting(false)
     }
@@ -80,8 +80,8 @@ export default function SettingsPage() {
       const response = await apiRequest<{ authorization_url: string; state: string }>('/integrations/xero/connect')
       // Redirect to Xero authorization page
       window.location.href = response.authorization_url
-    } catch (err: any) {
-      setError(err.message || 'Failed to connect to Xero')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to connect to Xero')
       setConnecting(false)
     }
   }

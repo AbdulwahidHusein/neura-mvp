@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { apiRequest } from '@/lib/api/client'
 
 interface SyncStatusResponse {
@@ -33,103 +33,119 @@ export default function InsightGenerationModal({
     updated_at: new Date().toISOString(),
   }))
   const [notifyWhenReady, setNotifyWhenReady] = useState(false)
-  const [pollCount, setPollCount] = useState(0)
+  
+  // Use refs to prevent race conditions and stale closures
+  const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isMountedRef = useRef(true)
+  const pollCounterRef = useRef(0)
   
   // Use provided trigger timestamp or current time as fallback
-  const triggerTimestamp = triggeredAt || Date.now()
+  const triggerTimestampRef = useRef(triggeredAt || Date.now())
+  
+  // Update trigger timestamp when prop changes
+  useEffect(() => {
+    if (triggeredAt) {
+      triggerTimestampRef.current = triggeredAt
+    }
+  }, [triggeredAt])
+
+  // Memoize onComplete to avoid unnecessary effect reruns
+  const onCompleteRef = useRef(onComplete)
+  useEffect(() => {
+    onCompleteRef.current = onComplete
+  }, [onComplete])
 
   useEffect(() => {
+    isMountedRef.current = true
+    
     if (!isOpen) {
-      // Reset to optimistic state when modal closes
+      // Reset state when modal closes
       setStatus({
         sync_status: 'IN_PROGRESS',
         sync_step: 'CONNECTING',
         last_sync_error: null,
         updated_at: new Date().toISOString(),
       })
-      setPollCount(0)
+      pollCounterRef.current = 0
       return
     }
 
-    let pollInterval: NodeJS.Timeout | null = null
-    let pollCounter = 0
-
     const pollStatus = async () => {
+      if (!isMountedRef.current) return
+      
       try {
         const response = await apiRequest<SyncStatusResponse>('/api/insights/status')
+        
+        if (!isMountedRef.current) return
+        
         setStatus(response)
-        pollCounter++
+        pollCounterRef.current++
 
         // Stop polling if completed or failed
         if (response.sync_status === 'COMPLETED') {
           // Validate that this completion is from AFTER we triggered
-          // This prevents accepting stale COMPLETED status from previous generation
           let isFreshCompletion = false
           
           if (response.updated_at) {
-            // Parse ISO timestamp to UTC milliseconds for safe comparison
-            // ISO strings are timezone-aware, Date.parse handles them correctly
             const statusUpdatedAt = new Date(response.updated_at).getTime()
-            
-            // Only accept COMPLETED if it's from AFTER we triggered
-            // Add 1 second buffer to account for clock skew and processing time
-            isFreshCompletion = statusUpdatedAt >= triggerTimestamp - 1000
+            isFreshCompletion = statusUpdatedAt >= triggerTimestampRef.current - 1000
           } else {
-            // No updated_at timestamp - treat as fresh completion (fallback)
-            // This shouldn't happen, but handle gracefully
             isFreshCompletion = true
           }
           
           if (isFreshCompletion) {
-            // This is a fresh completion - close modal
-            if (pollInterval) clearTimeout(pollInterval)
+            // Clear any pending timeout
+            if (pollTimeoutRef.current) {
+              clearTimeout(pollTimeoutRef.current)
+              pollTimeoutRef.current = null
+            }
             // Small delay before closing to show completion state
-            setTimeout(() => {
-              onComplete()
-              if (notifyWhenReady) {
-                // Show browser notification if permission granted
-                if ('Notification' in window && Notification.permission === 'granted') {
-                  new Notification('Insights Ready', {
-                    body: 'Your financial insights are now available.',
-                    icon: '/favicon.ico',
-                  })
-                }
+            pollTimeoutRef.current = setTimeout(() => {
+              if (!isMountedRef.current) return
+              onCompleteRef.current()
+              if (notifyWhenReady && 'Notification' in window && Notification.permission === 'granted') {
+                new Notification('Insights Ready', {
+                  body: 'Your financial insights are now available.',
+                  icon: '/favicon.ico',
+                })
               }
             }, 1500)
           } else {
-            // This is stale completion from previous run - ignore and keep polling
-            // Continue polling with adaptive interval
-            const interval = pollCounter < 3 ? 2000 : 10000
-            if (pollInterval) clearTimeout(pollInterval)
-            pollInterval = setTimeout(pollStatus, interval)
+            // Stale completion - keep polling
+            const interval = pollCounterRef.current < 3 ? 2000 : 10000
+            pollTimeoutRef.current = setTimeout(pollStatus, interval)
           }
         } else if (response.sync_status === 'FAILED') {
-          if (pollInterval) clearInterval(pollInterval)
+          // Stop polling on failure
+          if (pollTimeoutRef.current) {
+            clearTimeout(pollTimeoutRef.current)
+            pollTimeoutRef.current = null
+          }
         } else {
           // Continue polling with adaptive interval
-          // First 3 polls: 2 seconds, then 10 seconds
-          const interval = pollCounter < 3 ? 2000 : 10000
-          
-          if (pollInterval) clearInterval(pollInterval)
-          pollInterval = setTimeout(pollStatus, interval)
+          const interval = pollCounterRef.current < 3 ? 2000 : 10000
+          pollTimeoutRef.current = setTimeout(pollStatus, interval)
         }
       } catch (err) {
-        // Continue polling on error
+        if (!isMountedRef.current) return
         console.error('Failed to fetch status:', err)
-        pollCounter++
-        const interval = pollCounter < 3 ? 2000 : 10000
-        if (pollInterval) clearInterval(pollInterval)
-        pollInterval = setTimeout(pollStatus, interval)
+        pollCounterRef.current++
+        const interval = pollCounterRef.current < 3 ? 2000 : 10000
+        pollTimeoutRef.current = setTimeout(pollStatus, interval)
       }
     }
 
-    // Poll immediately, then schedule next poll
+    // Start polling
     pollStatus()
 
     return () => {
-      if (pollInterval) clearTimeout(pollInterval)
+      isMountedRef.current = false
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current)
+        pollTimeoutRef.current = null
+      }
     }
-  }, [isOpen, onComplete, notifyWhenReady, triggerTimestamp])
+  }, [isOpen, notifyWhenReady])
 
   if (!isOpen) return null
 

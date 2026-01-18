@@ -18,7 +18,7 @@ export default function XeroConnectModal({ isOpen, onClose }: XeroConnectModalPr
       const response = await apiRequest<{ authorization_url: string; state: string }>('/integrations/xero/connect')
       // Redirect to Xero authorization page
       window.location.href = response.authorization_url
-    } catch (err: any) {
+    } catch (err) {
       setConnecting(false)
       // Error will be handled by backend redirect
     }

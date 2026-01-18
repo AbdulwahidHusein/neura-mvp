@@ -30,6 +30,9 @@ interface SettingsStore {
 
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
+// Store pending promise for request deduplication
+let pendingFetchPromise: Promise<void> | null = null
+
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   settings: null,
   isLoading: false,
@@ -47,28 +50,35 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       }
     }
 
-    // Don't fetch if already loading
-    if (state.isLoading) {
-      return
+    // If a fetch is already in progress, return the existing promise (deduplication)
+    if (pendingFetchPromise) {
+      return pendingFetchPromise
     }
 
     set({ isLoading: true, error: null })
 
-    try {
-      const { apiRequest } = await import('@/lib/api/client')
-      const data = await apiRequest<SettingsData>('/settings/')
-      set({
-        settings: data,
-        isLoading: false,
-        lastFetched: Date.now(),
-        error: null,
-      })
-    } catch (err: any) {
-      set({
-        isLoading: false,
-        error: err.message || 'Failed to load settings',
-      })
+    const fetchTask = async () => {
+      try {
+        const { apiRequest } = await import('@/lib/api/client')
+        const data = await apiRequest<SettingsData>('/settings/')
+        set({
+          settings: data,
+          isLoading: false,
+          lastFetched: Date.now(),
+          error: null,
+        })
+      } catch (err) {
+        set({
+          isLoading: false,
+          error: err instanceof Error ? err.message : 'Failed to load settings',
+        })
+      } finally {
+        pendingFetchPromise = null
+      }
     }
+
+    pendingFetchPromise = fetchTask()
+    return pendingFetchPromise
   },
 
   getXeroConnected: () => {

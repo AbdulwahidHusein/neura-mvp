@@ -44,8 +44,8 @@ export default function LoginPage() {
     try {
       await signIn(email, password)
       // Redirect happens in signIn, so we don't need to set loading to false
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign in')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sign in')
       setLoading(false)
     }
   }
@@ -58,8 +58,8 @@ export default function LoginPage() {
 
     try {
       await signInWithGoogle()
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign in with Google')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sign in with Google')
       setLoading(false)
     }
   }

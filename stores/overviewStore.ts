@@ -53,6 +53,12 @@ export interface OverviewData {
   calculated_at: string | null
 }
 
+// Cache TTL in milliseconds (2 minutes)
+const CACHE_TTL = 2 * 60 * 1000
+
+// Store pending promise for request deduplication
+let pendingFetchPromise: Promise<void> | null = null
+
 interface OverviewStore {
   data: OverviewData | null
   isLoading: boolean
@@ -76,32 +82,41 @@ export const useOverviewStore = create<OverviewStore>((set, get) => ({
     
     // Return cached data if still valid and not forcing refresh
     if (!forceRefresh && state.data && state.lastFetched) {
-      // Cache persists until page refresh (no TTL)
-      return // Use cached data
+      const age = Date.now() - state.lastFetched
+      if (age < CACHE_TTL) {
+        return // Use cached data
+      }
     }
 
-    // Don't fetch if already loading
-    if (state.isLoading) {
-      return
+    // If a fetch is already in progress, return the existing promise (deduplication)
+    if (pendingFetchPromise) {
+      return pendingFetchPromise
     }
 
     set({ isLoading: true, error: null })
 
-    try {
-      const { apiRequest } = await import('@/lib/api/client')
-      const data = await apiRequest<OverviewData>('/api/insights/')
-      set({
-        data,
-        isLoading: false,
-        lastFetched: Date.now(),
-        error: null,
-      })
-    } catch (err: any) {
-      set({
-        isLoading: false,
-        error: err.message || 'Failed to load overview data',
-      })
+    const fetchTask = async () => {
+      try {
+        const { apiRequest } = await import('@/lib/api/client')
+        const data = await apiRequest<OverviewData>('/api/insights/')
+        set({
+          data,
+          isLoading: false,
+          lastFetched: Date.now(),
+          error: null,
+        })
+      } catch (err) {
+        set({
+          isLoading: false,
+          error: err instanceof Error ? err.message : 'Failed to load overview data',
+        })
+      } finally {
+        pendingFetchPromise = null
+      }
     }
+
+    pendingFetchPromise = fetchTask()
+    return pendingFetchPromise
   },
 
   updateOverview: (data: OverviewData) => {
