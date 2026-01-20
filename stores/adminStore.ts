@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-// Types matching backend schemas (operational data only - no financial data)
+// Types
 export interface OrganizationSummary {
   id: string
   name: string
@@ -20,12 +20,6 @@ export interface AdminDashboardStats {
   failed_syncs: number
 }
 
-export interface AdminDashboardData {
-  stats: AdminDashboardStats
-  organizations: OrganizationSummary[]
-}
-
-// Feedback types (matching existing backend)
 export interface FeedbackItem {
   id: string
   insight_id: string
@@ -38,20 +32,6 @@ export interface FeedbackItem {
   created_at: string
 }
 
-export interface FeedbackSummaryItem {
-  insight_type: string
-  insight_title: string
-  total_feedback: number
-  helpful_count: number
-  not_helpful_count: number
-  helpful_percentage: number
-  comments: Array<{
-    comment: string
-    is_helpful: boolean
-    created_at: string
-  }>
-}
-
 export interface OverallFeedbackStats {
   total_feedback: number
   helpful_count: number
@@ -59,125 +39,116 @@ export interface OverallFeedbackStats {
   helpful_percentage: number
 }
 
-export interface FeedbackSummaryData {
-  summary: FeedbackSummaryItem[]
-  overall_stats: OverallFeedbackStats
+export interface UserSummary {
+  id: string
+  email: string
+  role: 'user' | 'admin'
+  organization_name: string | null
+  created_at: string
 }
 
-// Feedback list response
-interface FeedbackListResponse {
-  total: number
-  feedback: FeedbackItem[]
-}
-
-// Store state
+// Store
 interface AdminStore {
-  // Dashboard data
-  dashboard: AdminDashboardData | null
-  isDashboardLoading: boolean
-  dashboardError: string | null
+  // Stats (lightweight, fetch once)
+  stats: AdminDashboardStats | null
   
-  // Feedback summary
-  feedbackSummary: FeedbackSummaryData | null
-  isFeedbackLoading: boolean
-  feedbackError: string | null
+  // Paginated data
+  organizations: { items: OrganizationSummary[]; total: number; loaded: boolean }
+  feedback: { items: FeedbackItem[]; total: number; loaded: boolean; stats: OverallFeedbackStats | null }
+  users: { items: UserSummary[]; total: number; loaded: boolean }
   
-  // Feedback list (paginated)
-  feedbackList: FeedbackItem[]
-  feedbackTotal: number
-  isFeedbackListLoading: boolean
-  feedbackListError: string | null
+  // Loading states
+  isLoading: { stats: boolean; orgs: boolean; feedback: boolean; users: boolean }
   
   // Actions
-  fetchDashboard: () => Promise<void>
-  fetchFeedbackSummary: () => Promise<void>
-  fetchFeedbackList: (limit?: number, offset?: number) => Promise<void>
-  clearAdmin: () => void
+  fetchStats: () => Promise<void>
+  fetchOrganizations: (limit?: number, offset?: number) => Promise<void>
+  fetchFeedback: (limit?: number, offset?: number) => Promise<void>
+  fetchUsers: (limit?: number, offset?: number) => Promise<void>
+  updateUserRole: (userId: string, role: 'admin' | 'user') => Promise<boolean>
 }
 
 export const useAdminStore = create<AdminStore>((set, get) => ({
-  dashboard: null,
-  isDashboardLoading: false,
-  dashboardError: null,
-  
-  feedbackSummary: null,
-  isFeedbackLoading: false,
-  feedbackError: null,
-  
-  feedbackList: [],
-  feedbackTotal: 0,
-  isFeedbackListLoading: false,
-  feedbackListError: null,
+  stats: null,
+  organizations: { items: [], total: 0, loaded: false },
+  feedback: { items: [], total: 0, loaded: false, stats: null },
+  users: { items: [], total: 0, loaded: false },
+  isLoading: { stats: false, orgs: false, feedback: false, users: false },
 
-  fetchDashboard: async () => {
-    set({ isDashboardLoading: true, dashboardError: null })
-    
+  fetchStats: async () => {
+    if (get().stats) return // Already loaded
+    set(s => ({ isLoading: { ...s.isLoading, stats: true } }))
     try {
       const { apiRequest } = await import('@/lib/api/client')
-      const data = await apiRequest<AdminDashboardData>('/api/admin/dashboard')
-      set({
-        dashboard: data,
-        isDashboardLoading: false,
-        dashboardError: null,
-      })
-    } catch (err) {
-      set({
-        isDashboardLoading: false,
-        dashboardError: err instanceof Error ? err.message : 'Failed to load admin dashboard',
-      })
+      const data = await apiRequest<{ stats: AdminDashboardStats }>('/api/admin/dashboard')
+      set(s => ({ stats: data.stats, isLoading: { ...s.isLoading, stats: false } }))
+    } catch {
+      set(s => ({ isLoading: { ...s.isLoading, stats: false } }))
     }
   },
 
-  fetchFeedbackSummary: async () => {
-    set({ isFeedbackLoading: true, feedbackError: null })
-    
+  fetchOrganizations: async (limit = 50, offset = 0) => {
+    if (get().organizations.loaded && offset === 0) return // Already loaded first page
+    set(s => ({ isLoading: { ...s.isLoading, orgs: true } }))
     try {
       const { apiRequest } = await import('@/lib/api/client')
-      const data = await apiRequest<FeedbackSummaryData>('/api/feedback/admin/summary')
-      set({
-        feedbackSummary: data,
-        isFeedbackLoading: false,
-        feedbackError: null,
-      })
-    } catch (err) {
-      set({
-        isFeedbackLoading: false,
-        feedbackError: err instanceof Error ? err.message : 'Failed to load feedback summary',
-      })
-    }
-  },
-
-  fetchFeedbackList: async (limit = 20, offset = 0) => {
-    set({ isFeedbackListLoading: true, feedbackListError: null })
-    
-    try {
-      const { apiRequest } = await import('@/lib/api/client')
-      const data = await apiRequest<FeedbackListResponse>(
-        `/api/feedback/admin?limit=${limit}&offset=${offset}`
+      const data = await apiRequest<{ organizations: OrganizationSummary[]; total: number }>(
+        `/api/admin/organizations?limit=${limit}&offset=${offset}`
       )
-      set({
-        feedbackList: data.feedback,
-        feedbackTotal: data.total,
-        isFeedbackListLoading: false,
-        feedbackListError: null,
-      })
-    } catch (err) {
-      set({
-        isFeedbackListLoading: false,
-        feedbackListError: err instanceof Error ? err.message : 'Failed to load feedback list',
-      })
+      set(s => ({
+        organizations: { items: data.organizations, total: data.total, loaded: true },
+        isLoading: { ...s.isLoading, orgs: false },
+      }))
+    } catch {
+      set(s => ({ isLoading: { ...s.isLoading, orgs: false } }))
     }
   },
 
-  clearAdmin: () => {
-    set({
-      dashboard: null,
-      dashboardError: null,
-      feedbackSummary: null,
-      feedbackError: null,
-      feedbackList: [],
-      feedbackTotal: 0,
-      feedbackListError: null,
-    })
+  fetchFeedback: async (limit = 20, offset = 0) => {
+    set(s => ({ isLoading: { ...s.isLoading, feedback: true } }))
+    try {
+      const { apiRequest } = await import('@/lib/api/client')
+      const [listData, summaryData] = await Promise.all([
+        apiRequest<{ feedback: FeedbackItem[]; total: number }>(`/api/feedback/admin?limit=${limit}&offset=${offset}`),
+        !get().feedback.stats ? apiRequest<{ overall_stats: OverallFeedbackStats }>('/api/feedback/admin/summary') : Promise.resolve(null),
+      ])
+      set(s => ({
+        feedback: {
+          items: listData.feedback,
+          total: listData.total,
+          loaded: true,
+          stats: summaryData?.overall_stats ?? s.feedback.stats,
+        },
+        isLoading: { ...s.isLoading, feedback: false },
+      }))
+    } catch {
+      set(s => ({ isLoading: { ...s.isLoading, feedback: false } }))
+    }
+  },
+
+  fetchUsers: async (limit = 50, offset = 0) => {
+    if (get().users.loaded && offset === 0) return // Already loaded first page
+    set(s => ({ isLoading: { ...s.isLoading, users: true } }))
+    try {
+      const { apiRequest } = await import('@/lib/api/client')
+      const data = await apiRequest<{ users: UserSummary[]; total: number }>(`/api/admin/users?limit=${limit}&offset=${offset}`)
+      set(s => ({
+        users: { items: data.users, total: data.total ?? data.users.length, loaded: true },
+        isLoading: { ...s.isLoading, users: false },
+      }))
+    } catch {
+      set(s => ({ isLoading: { ...s.isLoading, users: false } }))
+    }
+  },
+
+  updateUserRole: async (userId: string, role: 'admin' | 'user') => {
+    try {
+      const { apiRequest } = await import('@/lib/api/client')
+      await apiRequest(`/api/admin/users/${userId}/role?role=${role}`, { method: 'POST' })
+      set(s => ({ users: { ...s.users, items: s.users.items.map(u => u.id === userId ? { ...u, role } : u) } }))
+      return true
+    } catch {
+      return false
+    }
   },
 }))
