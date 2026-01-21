@@ -1,6 +1,7 @@
 'use client'
 
 import { Insight } from '@/stores/overviewStore'
+import { formatDateWithAt } from '@/lib/utils/formatDate'
 
 interface OKCardProps {
   insight: Insight
@@ -18,42 +19,55 @@ export default function OKCard({
   isLoading = false,
 }: OKCardProps) {
   // Extract impact amount and suggested action for supporting line
-  // Format: "impact amount · suggested action"
+  // Format: "impact amount · suggested action" - Figma 1.8
   const impactAmount = insight.supporting_numbers.find(n => 
     n.label.toLowerCase().includes('impact') || 
     n.label.toLowerCase().includes('change') ||
-    n.label.toLowerCase().includes('difference')
+    n.label.toLowerCase().includes('difference') ||
+    n.label.toLowerCase().includes('vs')
   )
   const suggestedAction = insight.recommended_actions[0] || ''
 
   return (
-    <div className="rounded-md border border-border-secondary bg-bg-secondary-subtle dark:bg-bg-secondary p-4">
+    <div className="rounded-lg border border-border-secondary bg-bg-secondary-subtle dark:bg-bg-secondary p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <span className="rounded-full border border-border-secondary bg-bg-secondary-subtle dark:bg-bg-secondary px-2 py-0.5 text-xs font-medium text-text-primary-900 shrink-0">
+          {/* OK Badge - Figma 1.8: outlined, not filled */}
+          <span className="rounded-full border border-border-primary bg-bg-primary dark:bg-bg-primary px-2.5 py-0.5 text-xs font-medium text-text-secondary-700 shrink-0">
             OK
           </span>
           <div className="min-w-0 flex-1">
+            {/* Title + Supporting Line */}
             <h3 className="break-words text-sm font-semibold text-text-primary-900 mb-0.5">{insight.title}</h3>
+            {/* Generated Date */}
+            <p className="mb-1 text-xs text-text-quaternary-500">
+              {formatDateWithAt(insight.generated_at)}
+            </p>
             {(impactAmount || suggestedAction) && (
               <p className="break-words text-xs leading-relaxed text-text-quaternary-500">
-                {impactAmount && typeof impactAmount.value === 'number' 
-                  ? `${impactAmount.value >= 0 ? '+' : ''}$${Math.abs(impactAmount.value).toLocaleString()}`
-                  : impactAmount?.value || ''}
-                {impactAmount && suggestedAction && ' · '}
+                {impactAmount && (
+                  <span className="text-text-brand-tertiary-600 font-medium">
+                    {typeof impactAmount.value === 'number' 
+                      ? `${impactAmount.value >= 0 ? '+' : ''}$${Math.abs(impactAmount.value).toLocaleString()}`
+                      : impactAmount?.value || ''}
+                  </span>
+                )}
+                {impactAmount && suggestedAction && <span className="text-text-quaternary-500"> · </span>}
                 {suggestedAction}
               </p>
             )}
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          {/* Got it button */}
           <button
             onClick={onGotIt}
             disabled={isLoading}
-            className="rounded-md border border-border-secondary bg-bg-secondary-subtle dark:bg-bg-secondary px-3 py-1.5 text-sm font-medium text-text-primary-900 transition-colors hover:bg-bg-secondary whitespace-nowrap cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-md border border-border-primary bg-bg-primary dark:bg-bg-primary px-4 py-1.5 text-sm font-medium text-text-primary-900 transition-colors hover:bg-bg-secondary whitespace-nowrap cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Loading...' : 'Got it'}
           </button>
+          {/* Chevron for expand */}
           <button
             onClick={onExpand}
             className="rounded-md p-1.5 text-text-primary-900 hover:bg-bg-secondary cursor-pointer"
@@ -70,6 +84,7 @@ export default function OKCard({
         </div>
       </div>
 
+      {/* Expanded Content - Same pattern as WATCH cards per Figma 1.8 */}
       {isExpanded && (
         <div className="mt-4 space-y-4 border-t border-border-secondary pt-4">
           <div>
@@ -84,10 +99,10 @@ export default function OKCard({
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-primary-900">
                 RECOMMENDED ACTIONS
               </h4>
-              <ul className="space-y-1 text-sm leading-relaxed text-text-secondary-700">
+              <ul className="space-y-1.5 text-sm leading-relaxed text-text-secondary-700">
                 {insight.recommended_actions.map((action, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-text-primary-900"></span>
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-text-brand-tertiary-600"></span>
                     <span className="break-words">{action}</span>
                   </li>
                 ))}

@@ -91,21 +91,30 @@ const gradeConfig = {
 }
 
 const confidenceConfig = {
-  high: { label: 'High confidence', icon: '●' },
-  medium: { label: 'Medium confidence', icon: '●' },
-  low: { label: 'Low confidence', icon: '●' },
+  high: { label: 'High confidence' },
+  medium: { label: 'Medium confidence' },
+  low: { label: 'Low confidence' },
 }
 
 // Helper to get trend arrow for a score (relative to max)
 function getTrendIcon(score: number, max: number) {
   const percentage = (score / max) * 100
   if (percentage >= 70) {
-    return <span className="text-green-500">↗</span>
+    return <span className="text-text-brand-tertiary-600">↗</span>
   } else if (percentage >= 50) {
-    return <span className="text-gray-500">→</span>
+    return <span className="text-text-quaternary-500">→</span>
   } else {
     return <span className="text-amber-500">↘</span>
   }
+}
+
+// Calculate runway months from score
+function getRunwayMonths(score: number): number {
+  // Approximate: higher score = more runway
+  if (score >= 80) return 6
+  if (score >= 60) return 4
+  if (score >= 40) return 2
+  return 1
 }
 
 export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthScoreCardProps) {
@@ -115,22 +124,36 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
   if (isLoading) {
     return (
       <div className="bg-bg-primary rounded-xl border border-border-secondary p-6 animate-pulse">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-bg-secondary rounded"></div>
-            <div className="h-4 bg-bg-secondary rounded w-36"></div>
-          </div>
+        {/* Badges skeleton */}
+        <div className="flex items-center gap-2 mb-3">
           <div className="h-6 bg-bg-secondary rounded-full w-16"></div>
+          <div className="h-6 bg-bg-secondary rounded-full w-32"></div>
         </div>
-        <div className="h-12 bg-bg-secondary rounded w-24 mb-3"></div>
-        <div className="h-4 bg-bg-secondary rounded w-full mb-6"></div>
-        <div className="flex gap-4 mb-6">
-          <div className="flex-1 h-16 bg-bg-secondary rounded"></div>
-          <div className="flex-1 h-16 bg-bg-secondary rounded"></div>
-          <div className="flex-1 h-16 bg-bg-secondary rounded"></div>
+        {/* Title skeleton */}
+        <div className="h-7 bg-bg-secondary rounded w-48 mb-4"></div>
+        {/* Score box skeleton */}
+        <div className="border-l-4 border-l-bg-secondary bg-bg-secondary-subtle rounded-lg p-5 mb-4">
+          <div className="h-12 bg-bg-secondary rounded w-24 mb-3"></div>
+          <div className="h-4 bg-bg-secondary rounded w-full mb-4"></div>
+          <div className="flex gap-8 mb-4">
+            <div className="flex-1">
+              <div className="h-3 bg-bg-secondary rounded w-20 mb-2"></div>
+              <div className="h-6 bg-bg-secondary rounded w-12"></div>
+            </div>
+            <div className="flex-1">
+              <div className="h-3 bg-bg-secondary rounded w-16 mb-2"></div>
+              <div className="h-6 bg-bg-secondary rounded w-12"></div>
+            </div>
+            <div className="flex-1">
+              <div className="h-3 bg-bg-secondary rounded w-18 mb-2"></div>
+              <div className="h-6 bg-bg-secondary rounded w-12"></div>
+            </div>
+          </div>
+          <div className="h-4 bg-bg-secondary rounded w-3/4"></div>
         </div>
+        {/* Footer skeleton */}
         <div className="flex items-center justify-between">
-          <div className="h-4 bg-bg-secondary rounded w-32"></div>
+          <div className="h-4 bg-bg-secondary rounded w-40"></div>
           <div className="h-9 bg-bg-secondary rounded w-28"></div>
         </div>
       </div>
@@ -141,22 +164,30 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
   if (!data) {
     return (
       <div className="bg-bg-primary rounded-xl border border-border-secondary p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <svg className="w-5 h-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-          </svg>
-          <span className="text-sm font-medium text-text-quaternary-500 uppercase tracking-wide">
-            Business Health Score
+        {/* Badges */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="px-3 py-1 rounded-full text-xs font-medium bg-utility-gray-200 text-text-quaternary-500">
+            --
+          </span>
+          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-border-secondary text-text-quaternary-500">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            No data
           </span>
         </div>
-        <div className="text-center py-6">
+        {/* Title */}
+        <h2 className="text-xl font-semibold text-text-primary-900 mb-4">
+          Business Health Score
+        </h2>
+        <div className="text-center py-8">
           <p className="text-text-quaternary-500 mb-4">
             No health score data available yet.
           </p>
           {onRefresh && (
             <button
               onClick={onRefresh}
-              className="px-4 py-2 bg-brand-solid text-text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
+              className="px-4 py-2 bg-bg-brand-solid text-text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium cursor-pointer"
             >
               Calculate Health Score
             </button>
@@ -169,6 +200,7 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
   const { scorecard, category_scores = {}, drivers, data_quality } = data
   const grade = gradeConfig[scorecard?.grade] ?? gradeConfig.D
   const confidence = confidenceConfig[scorecard?.confidence] ?? confidenceConfig.low
+  const runwayMonths = getRunwayMonths(scorecard.final_score)
 
   // Extract key metrics for the 3-box display (Cash, Revenue, Expenses from categories)
   // Default values handle case when health score hasn't been calculated yet
@@ -179,80 +211,87 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
 
   return (
     <div className="bg-bg-primary rounded-xl border border-border-secondary p-6">
-      {/* Header - matches Figma 1.2 */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <svg className="w-5 h-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-          </svg>
-          <span className="text-sm font-medium text-text-quaternary-500 uppercase tracking-wide">
-            Business Health Score
-          </span>
-        </div>
+      {/* Badges Row - Figma 2.2 */}
+      <div className="flex items-center gap-2 mb-3">
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${grade.badgeClass}`}>
           {grade.label}
         </span>
-      </div>
-
-      {/* Large Score Display - matches Figma */}
-      <div className="mb-3">
-        <span className="text-5xl font-bold text-text-primary-900">
-          {Math.round(scorecard.final_score)}
+        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-border-secondary text-text-secondary-700 bg-white dark:bg-bg-secondary">
+          <svg className="w-3.5 h-3.5 text-text-brand-tertiary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {confidence.label}
         </span>
-        <span className="text-xl text-text-quaternary-500 ml-1">/100</span>
       </div>
 
-      {/* Description */}
-      <p className="text-sm text-text-secondary-700 mb-6">
-        {grade.description}
-      </p>
+      {/* Title - Figma 2.3 */}
+      <h2 className="text-xl font-semibold text-text-primary-900 mb-4">
+        Business Health Score
+      </h2>
 
-      {/* Three Metric Boxes - matches Figma 1.3 */}
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1 bg-bg-secondary rounded-lg p-3 text-center">
-          <div className="text-xs text-text-quaternary-500 mb-1">Cash position</div>
-          <div className="flex items-center justify-center gap-1">
-            <span className="text-xl font-semibold text-text-primary-900">
-              {Math.round((cashScore.points_awarded / cashScore.max_points) * 100)}
-            </span>
-            {getTrendIcon(cashScore.points_awarded, cashScore.max_points)}
+      {/* Score Box with Teal Left Border - Figma 2.4 */}
+      <div className="border-l-4 border-l-text-brand-tertiary-600 bg-bg-secondary-subtle dark:bg-bg-secondary rounded-r-lg p-5 mb-4">
+        {/* Large Score Display */}
+        <div className="mb-3">
+          <span className="text-5xl font-bold text-text-primary-900">
+            {Math.round(scorecard.final_score)}
+          </span>
+          <span className="text-xl text-text-quaternary-500 ml-1">/100</span>
+        </div>
+
+        {/* Description */}
+        <p className="text-sm text-text-secondary-700 mb-5">
+          {grade.description}
+        </p>
+
+        {/* Three Metric Boxes - Centered as per Figma 2.4 */}
+        <div className="flex justify-center gap-12 mb-5">
+          <div className="text-center">
+            <div className="text-xs text-text-quaternary-500 mb-1">Cash position</div>
+            <div className="flex items-center justify-center gap-1">
+              <span className="text-xl font-semibold text-text-primary-900">
+                {Math.round((cashScore.points_awarded / cashScore.max_points) * 100)}
+              </span>
+              {getTrendIcon(cashScore.points_awarded, cashScore.max_points)}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-xs text-text-quaternary-500 mb-1">Revenue</div>
+            <div className="flex items-center justify-center gap-1">
+              <span className="text-xl font-semibold text-text-primary-900">
+                {Math.round((profitabilityScore.points_awarded / profitabilityScore.max_points) * 100)}
+              </span>
+              {getTrendIcon(profitabilityScore.points_awarded, profitabilityScore.max_points)}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-xs text-text-quaternary-500 mb-1">Expenses</div>
+            <div className="flex items-center justify-center gap-1">
+              <span className="text-xl font-semibold text-text-primary-900">
+                {Math.round((liquidityScore.points_awarded / liquidityScore.max_points) * 100)}
+              </span>
+              {getTrendIcon(liquidityScore.points_awarded, liquidityScore.max_points)}
+            </div>
           </div>
         </div>
-        <div className="flex-1 bg-bg-secondary rounded-lg p-3 text-center">
-          <div className="text-xs text-text-quaternary-500 mb-1">Revenue</div>
-          <div className="flex items-center justify-center gap-1">
-            <span className="text-xl font-semibold text-text-primary-900">
-              {Math.round((profitabilityScore.points_awarded / profitabilityScore.max_points) * 100)}
-            </span>
-            {getTrendIcon(profitabilityScore.points_awarded, profitabilityScore.max_points)}
-          </div>
-        </div>
-        <div className="flex-1 bg-bg-secondary rounded-lg p-3 text-center">
-          <div className="text-xs text-text-quaternary-500 mb-1">Expenses</div>
-          <div className="flex items-center justify-center gap-1">
-            <span className="text-xl font-semibold text-text-primary-900">
-              {Math.round((liquidityScore.points_awarded / liquidityScore.max_points) * 100)}
-            </span>
-            {getTrendIcon(liquidityScore.points_awarded, liquidityScore.max_points)}
-          </div>
-        </div>
+
+        {/* Runway Summary */}
+        <p className="text-sm text-text-secondary-700">
+          At your current burn rate, you have approximately {runwayMonths} months of runway remaining.
+        </p>
       </div>
 
-      {/* Footer - matches Figma */}
+      {/* Footer */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 text-xs text-text-quaternary-500">
           <span>Updated daily</span>
-          <span className="flex items-center gap-1">
-            <span className="text-amber-500">{confidence.icon}</span>
-            {confidence.label}
-          </span>
         </div>
         <button
           onClick={() => setShowDetails(!showDetails)}
-          className="flex items-center gap-1 px-4 py-2 bg-brand-solid text-text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
+          className="flex items-center gap-1 px-4 py-2 bg-bg-brand-solid text-text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium cursor-pointer"
         >
           View details
-          <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+          <svg className={`w-4 h-4 transition-transform ${showDetails ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
           </svg>
         </button>
@@ -261,9 +300,59 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
       {/* Expanded Details Section */}
       {showDetails && (
         <div className="mt-6 pt-6 border-t border-border-secondary">
+          {/* WHAT WE'RE SEEING - Figma 2.5 */}
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-text-primary-900 mb-3">
+              WHAT WE'RE SEEING
+            </h3>
+            <ul className="space-y-2">
+              {Object.entries(category_scores).slice(0, 3).map(([key, cat]) => (
+                <li key={key} className="flex items-start gap-2 text-sm text-text-secondary-700">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-text-brand-tertiary-600"></span>
+                  <span>{cat.name}: {Math.round((cat.points_awarded / cat.max_points) * 100)}% of target</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* WHY THIS MATTERS NOW - Figma 2.6 */}
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-text-primary-900 mb-3">
+              WHY THIS MATTERS NOW
+            </h3>
+            <div className="bg-bg-secondary-subtle dark:bg-bg-secondary rounded-lg p-4">
+              <p className="text-sm text-text-secondary-700">
+                With {runwayMonths} months of runway, your cash position is {runwayMonths >= 4 ? 'stable for the near term' : 'tight'}. 
+                {runwayMonths >= 4 
+                  ? " This gives you time to plan without immediate pressure. However, it's worth monitoring closely if you're expecting any large expenses or if revenue becomes uncertain."
+                  : " Consider reviewing your expenses and following up on outstanding receivables to improve your position."
+                }
+              </p>
+            </div>
+          </div>
+
+          {/* WHAT TO DO NEXT - Figma 2.7 */}
+          {drivers.top_negative.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-text-primary-900 mb-3">
+                WHAT TO DO NEXT
+              </h3>
+              <ol className="space-y-2">
+                {drivers.top_negative.slice(0, 3).map((driver, index) => (
+                  <li key={driver.metric_id} className="flex items-start gap-3 text-sm text-text-secondary-700">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-text-brand-tertiary-600/10 text-text-brand-tertiary-600 text-xs font-semibold flex items-center justify-center">
+                      {index + 1}
+                    </span>
+                    <span>{driver.recommended_action}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
           {/* Category Breakdown */}
-          <h3 className="text-sm font-semibold text-text-primary-900 mb-4">
-            Category Breakdown
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-text-primary-900 mb-4">
+            SCORE BREAKDOWN
           </h3>
           <div className="space-y-3 mb-6">
             {Object.entries(category_scores).map(([key, cat]) => (
@@ -273,7 +362,7 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
                 </span>
                 <div className="flex-1 h-2 bg-bg-secondary rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-brand-solid transition-all duration-500"
+                    className="h-full bg-text-brand-tertiary-600 transition-all duration-500"
                     style={{ width: `${(cat.points_awarded / cat.max_points) * 100}%` }}
                   />
                 </div>
@@ -287,8 +376,8 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
           {/* Key Drivers */}
           {(drivers.top_positive.length > 0 || drivers.top_negative.length > 0) && (
             <>
-              <h3 className="text-sm font-semibold text-text-primary-900 mb-3">
-                Key Drivers
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-text-primary-900 mb-3">
+                KEY DRIVERS
               </h3>
               <div className="space-y-2 mb-6">
                 {drivers.top_negative.slice(0, 3).map((driver) => (
@@ -296,7 +385,7 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
                     key={driver.metric_id}
                     className="flex items-center gap-2 text-sm"
                   >
-                    <span className="text-icon-error">↓</span>
+                    <span className="text-red-500">↓</span>
                     <span className="text-text-secondary-700">{driver.label}</span>
                     <span className="text-text-quaternary-500 text-xs">
                       ({Math.round(driver.impact_points)} pts)
@@ -308,7 +397,7 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
                     key={driver.metric_id}
                     className="flex items-center gap-2 text-sm"
                   >
-                    <span className="text-icon-success">↑</span>
+                    <span className="text-text-brand-tertiary-600">↑</span>
                     <span className="text-text-secondary-700">{driver.label}</span>
                     <span className="text-text-quaternary-500 text-xs">
                       ({Math.round(driver.impact_points)} pts)
@@ -321,48 +410,16 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
 
           {/* Data Quality Warnings */}
           {data_quality.warnings.length > 0 && (
-            <div className="bg-bg-warning-secondary rounded-lg p-3 mb-4">
+            <div className="bg-[#fef3c7] dark:bg-[#78350f]/20 border border-[#fbbf24] dark:border-[#fbbf24]/40 rounded-lg p-3">
               <div className="flex items-start gap-2">
-                <svg className="w-5 h-5 text-icon-warning flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-[#d97706] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <p className="text-sm text-text-warning-primary">
+                <p className="text-sm text-[#92400e] dark:text-[#fbbf24]">
                   {data_quality.warnings[0]}
                 </p>
               </div>
             </div>
-          )}
-
-          {/* Detailed Driver Actions */}
-          {drivers.top_negative.length > 0 && (
-            <>
-              <h3 className="text-sm font-semibold text-text-primary-900 mb-3">
-                What to fix first
-              </h3>
-              <div className="space-y-3">
-                {drivers.top_negative.slice(0, 3).map((driver) => (
-                  <div
-                    key={driver.metric_id}
-                    className="bg-bg-secondary rounded-lg p-4"
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-icon-error font-medium text-sm">{driver.label}</span>
-                    </div>
-                    <p className="text-sm text-text-tertiary-600 mb-2">
-                      {driver.why_it_matters}
-                    </p>
-                    <div className="flex items-start gap-2">
-                      <span className="text-xs font-semibold text-brand-600 uppercase">
-                        Action:
-                      </span>
-                      <p className="text-sm text-text-secondary-700">
-                        {driver.recommended_action}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
           )}
         </div>
       )}
