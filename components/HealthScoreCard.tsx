@@ -254,6 +254,18 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
 
 
       <div className="bg-bg-primary rounded-xl border border-brand-solid p-6">
+        {/* Badges */}
+        <div className="flex items-center gap-2 mb-6">
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${grade.badgeClass}`}>
+            {grade.label}
+          </span>
+          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-utility-gray-100 text-text-secondary-700">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {confidence.label}
+          </span>
+        </div>
 
         {/* Large Score Display */}
         <div className="mb-4">

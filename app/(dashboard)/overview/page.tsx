@@ -48,14 +48,14 @@ export default function OverviewPage() {
     isPositive: true,
   })
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
-  
+
   // Use Zustand stores (all have built-in caching and request deduplication)
   const { settings, fetchSettings, getXeroConnected } = useSettingsStore()
   const { data, isLoading, error, fetchOverview, updateOverview } = useOverviewStore()
-  const { 
-    data: healthScore, 
-    isLoading: healthScoreLoading, 
-    fetchHealthScore 
+  const {
+    data: healthScore,
+    isLoading: healthScoreLoading,
+    fetchHealthScore
   } = useHealthScoreStore()
 
   // Fetch data only once when user is available
@@ -76,7 +76,7 @@ export default function OverviewPage() {
   useEffect(() => {
     // Collect all confidence values (normalize to lowercase)
     const confidenceSignals: string[] = []
-    
+
     // From insights data
     if (data?.cash_runway?.confidence_level) {
       confidenceSignals.push(data.cash_runway.confidence_level.toLowerCase())
@@ -84,19 +84,19 @@ export default function OverviewPage() {
     if (data?.cash_pressure?.confidence) {
       confidenceSignals.push(data.cash_pressure.confidence.toLowerCase())
     }
-    
+
     // From health score (important - this often shows low confidence)
     if (healthScore?.scorecard?.confidence) {
       confidenceSignals.push(healthScore.scorecard.confidence.toLowerCase())
     }
-    
+
     // Check for data quality warnings in health score
     const hasDataWarnings = (healthScore?.data_quality?.warnings?.length ?? 0) > 0
-    
+
     // Determine overall quality - worst signal wins
     const hasLowConfidence = confidenceSignals.includes('low') || hasDataWarnings
     const hasMediumConfidence = confidenceSignals.includes('medium')
-    
+
     if (hasLowConfidence) {
       setDataQuality('Low')
     } else if (hasMediumConfidence) {
@@ -108,17 +108,17 @@ export default function OverviewPage() {
   }, [data, healthScore])
 
   // Memoize filtered insights - must be before any early returns
-  const watchInsights = useMemo(() => 
+  const watchInsights = useMemo(() =>
     data?.insights.filter(i => i.severity === 'high' && !i.is_marked_done).slice(0, 3) || []
-  , [data?.insights])
+    , [data?.insights])
 
-  const okInsights = useMemo(() => 
+  const okInsights = useMemo(() =>
     data?.insights.filter(i => i.severity === 'medium' && !i.is_marked_done) || []
-  , [data?.insights])
+    , [data?.insights])
 
-  const resolvedInsights = useMemo(() => 
+  const resolvedInsights = useMemo(() =>
     data?.insights.filter(i => i.is_marked_done).slice(0, 5) || []
-  , [data?.insights])
+    , [data?.insights])
 
   const handleResolve = async (insightId: string) => {
     if (actionLoadingId) return // Prevent multiple simultaneous actions
@@ -191,10 +191,10 @@ export default function OverviewPage() {
       if (!settings) {
         await fetchSettings()
       }
-      
+
       // Check Xero connection using store
       const xeroConnected = getXeroConnected()
-      
+
       if (!xeroConnected) {
         setShowXeroModal(true)
         return
@@ -203,10 +203,10 @@ export default function OverviewPage() {
       // Record trigger timestamp BEFORE opening modal (UTC milliseconds)
       const triggeredAt = Date.now()
       setTriggerTimestamp(triggeredAt)
-      
+
       // Open modal IMMEDIATELY (optimistic UI)
       setShowInsightModal(true)
-      
+
       // Then trigger the backend process
       await apiRequest('/api/insights/trigger', {
         method: 'POST',
@@ -231,15 +231,15 @@ export default function OverviewPage() {
   const handleReSync = async () => {
     try {
       setSyncing(true)
-      
+
       // Ensure settings are loaded
       if (!settings) {
         await fetchSettings()
       }
-      
+
       // Check Xero connection using store
       const xeroConnected = getXeroConnected()
-      
+
       if (!xeroConnected) {
         setShowXeroModal(true)
         setSyncing(false)
@@ -249,10 +249,10 @@ export default function OverviewPage() {
       // Record trigger timestamp BEFORE opening modal (UTC milliseconds)
       const triggeredAt = Date.now()
       setTriggerTimestamp(triggeredAt)
-      
+
       // Open modal IMMEDIATELY (optimistic UI)
       setShowInsightModal(true)
-      
+
       // Then trigger the backend process
       await apiRequest('/api/insights/trigger', {
         method: 'POST',
@@ -295,19 +295,16 @@ export default function OverviewPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-text-quaternary-500">Data quality:</span>
                   <div className="flex gap-2">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      dataQuality === 'Good' ? 'bg-[#079455] text-white' : 'bg-bg-secondary-subtle text-text-quaternary-500'
-                    }`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${dataQuality === 'Good' ? 'bg-[#079455] text-white' : 'bg-bg-secondary-subtle text-text-quaternary-500'
+                      }`}>
                       Good
                     </span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      dataQuality === 'Mixed' ? 'bg-[#f59e0b] text-white' : 'bg-bg-secondary-subtle text-text-quaternary-500'
-                    }`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${dataQuality === 'Mixed' ? 'bg-[#f59e0b] text-white' : 'bg-bg-secondary-subtle text-text-quaternary-500'
+                      }`}>
                       Mixed
                     </span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      dataQuality === 'Low' ? 'bg-[#d92d20] text-white' : 'bg-bg-secondary-subtle text-text-quaternary-500'
-                    }`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${dataQuality === 'Low' ? 'bg-[#d92d20] text-white' : 'bg-bg-secondary-subtle text-text-quaternary-500'
+                      }`}>
                       Low
                     </span>
                   </div>
@@ -387,125 +384,125 @@ export default function OverviewPage() {
 
         {/* Main Content */}
         {!hasNoInsights && (
-        <div className="space-y-8">
-          {/* Business Health Score */}
-          <section>
-            <HealthScoreCard
-              data={healthScore}
-              isLoading={healthScoreLoading}
-              onRefresh={() => fetchHealthScore(true)}
-            />
-          </section>
-
-          {/* What needs your attention */}
-          {watchInsights.length > 0 && (
+          <div className="space-y-8">
+            {/* Business Health Score */}
             <section>
-              <h2 className="mb-4 text-xs font-semibold uppercase tracking-wide text-text-primary-900">
-                WHAT NEEDS YOUR ATTENTION
-              </h2>
-              <div className="space-y-4">
-                {watchInsights.map((insight) => (
-                  <WatchCard
-                    key={insight.insight_id}
-                    insight={insight}
-                    isExpanded={expandedCardId === insight.insight_id}
-                    onExpand={() => setExpandedCardId(expandedCardId === insight.insight_id ? null : insight.insight_id)}
-                    onResolve={() => handleResolve(insight.insight_id)}
-                    onFeedback={(isPositive) => setFeedbackModal({ isOpen: true, insightId: insight.insight_id, isPositive })}
-                    calculatedAt={data?.calculated_at || null}
-                    isLoading={actionLoadingId === insight.insight_id}
-                  />
-                ))}
-              </div>
+              <HealthScoreCard
+                data={healthScore}
+                isLoading={healthScoreLoading}
+                onRefresh={() => fetchHealthScore(true)}
+              />
             </section>
-          )}
 
-          {/* Also worth knowing */}
-          {okInsights.length > 0 && (
-            <section>
-              <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-primary-900">
-                <span className="h-0.5 w-8 bg-text-brand-tertiary-600"></span>
-                ALSO WORTH KNOWING
-              </h2>
-              <div className="space-y-3">
-                {okInsights.map((insight) => (
-                  <OKCard
-                    key={insight.insight_id}
-                    insight={insight}
-                    isExpanded={expandedCardId === insight.insight_id}
-                    onExpand={() => setExpandedCardId(expandedCardId === insight.insight_id ? null : insight.insight_id)}
-                    onGotIt={() => handleGotIt(insight.insight_id)}
-                    isLoading={actionLoadingId === insight.insight_id}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+            {/* What needs your attention */}
+            {watchInsights.length > 0 && (
+              <section>
+                <h2 className="mb-4 text-xs font-semibold uppercase tracking-wide text-text-primary-900">
+                  WHAT NEEDS YOUR ATTENTION
+                </h2>
+                <div className="space-y-4">
+                  {watchInsights.map((insight) => (
+                    <WatchCard
+                      key={insight.insight_id}
+                      insight={insight}
+                      isExpanded={expandedCardId === insight.insight_id}
+                      onExpand={() => setExpandedCardId(expandedCardId === insight.insight_id ? null : insight.insight_id)}
+                      onResolve={() => handleResolve(insight.insight_id)}
+                      onFeedback={(isPositive) => setFeedbackModal({ isOpen: true, insightId: insight.insight_id, isPositive })}
+                      calculatedAt={data?.calculated_at || null}
+                      isLoading={actionLoadingId === insight.insight_id}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {/* Coming up */}
-          {data?.upcoming_commitments && data.upcoming_commitments.large_upcoming_bills.length > 0 && (
-            <section>
-              <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-primary-900">
-                <span className="h-0.5 w-8 bg-text-brand-tertiary-600"></span>
-                COMING UP
-              </h2>
-              <div className="space-y-3">
-                {data.upcoming_commitments.large_upcoming_bills.slice(0, 3).map((bill, i) => (
-                  <OKCard
-                    key={i}
-                    insight={{
-                      insight_id: `upcoming-${i}`,
-                      insight_type: 'upcoming_commitment',
-                      title: `${bill.contact || bill.invoice_number || 'Payment'} due ${new Date(bill.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
-                      severity: 'medium',
-                      confidence_level: 'high',
-                      summary: `$${(bill.amount_due ?? 0).toLocaleString()} due soon`,
-                      why_it_matters: `This payment is due in the coming days. Ensure sufficient cash is available.`,
-                      recommended_actions: ['Review cash position', 'Confirm payment timing'],
-                      supporting_numbers: [{ label: 'Amount', value: `$${(bill.amount_due ?? 0).toLocaleString()}` }],
-                      generated_at: new Date().toISOString(),
-                      is_acknowledged: false,
-                      is_marked_done: false,
-                    }}
-                    isExpanded={expandedCardId === `upcoming-${i}`}
-                    onExpand={() => setExpandedCardId(expandedCardId === `upcoming-${i}` ? null : `upcoming-${i}`)}
-                    onGotIt={() => {}}
-                    isLoading={false}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+            {/* Also worth knowing */}
+            {okInsights.length > 0 && (
+              <section>
+                <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-primary-900">
+                  <span className="h-0.5 w-8 bg-text-brand-tertiary-600"></span>
+                  ALSO WORTH KNOWING
+                </h2>
+                <div className="space-y-3">
+                  {okInsights.map((insight) => (
+                    <OKCard
+                      key={insight.insight_id}
+                      insight={insight}
+                      isExpanded={expandedCardId === insight.insight_id}
+                      onExpand={() => setExpandedCardId(expandedCardId === insight.insight_id ? null : insight.insight_id)}
+                      onGotIt={() => handleGotIt(insight.insight_id)}
+                      isLoading={actionLoadingId === insight.insight_id}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {/* Resolved */}
-          {resolvedInsights.length > 0 && (
-            <section>
-              <h2 className="mb-4 text-xs font-semibold uppercase tracking-wide text-text-primary-900">
-                RESOLVED
-              </h2>
-              <div className="space-y-2">
-                {resolvedInsights.map((insight) => (
-                  <div
-                    key={insight.insight_id}
-                    className="flex items-center gap-3 py-2"
-                  >
-                    <svg className="h-5 w-5 shrink-0 text-text-brand-tertiary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="min-w-0 flex-1 break-words text-sm font-medium text-text-primary-900">{insight.title}</span>
-                    <span className="text-xs text-text-quaternary-500">Resolved</span>
-                    <span className="text-xs text-text-quaternary-500">
-                      {new Date(insight.generated_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
+            {/* Coming up */}
+            {data?.upcoming_commitments && data.upcoming_commitments.large_upcoming_bills.length > 0 && (
+              <section>
+                <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-primary-900">
+                  <span className="h-0.5 w-8 bg-text-brand-tertiary-600"></span>
+                  COMING UP
+                </h2>
+                <div className="space-y-3">
+                  {data.upcoming_commitments.large_upcoming_bills.slice(0, 3).map((bill, i) => (
+                    <OKCard
+                      key={i}
+                      insight={{
+                        insight_id: `upcoming-${i}`,
+                        insight_type: 'upcoming_commitment',
+                        title: `${bill.contact || bill.invoice_number || 'Payment'} due ${new Date(bill.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+                        severity: 'medium',
+                        confidence_level: 'high',
+                        summary: `$${(bill.amount_due ?? 0).toLocaleString()} due soon`,
+                        why_it_matters: `This payment is due in the coming days. Ensure sufficient cash is available.`,
+                        recommended_actions: ['Review cash position', 'Confirm payment timing'],
+                        supporting_numbers: [{ label: 'Amount', value: `$${(bill.amount_due ?? 0).toLocaleString()}` }],
+                        generated_at: new Date().toISOString(),
+                        is_acknowledged: false,
+                        is_marked_done: false,
+                      }}
+                      isExpanded={expandedCardId === `upcoming-${i}`}
+                      onExpand={() => setExpandedCardId(expandedCardId === `upcoming-${i}` ? null : `upcoming-${i}`)}
+                      onGotIt={() => { }}
+                      isLoading={false}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Resolved */}
+            {resolvedInsights.length > 0 && (
+              <section>
+                <h2 className="mb-4 text-xs font-semibold uppercase tracking-wide text-text-primary-900">
+                  RESOLVED
+                </h2>
+                <div className="space-y-2">
+                  {resolvedInsights.map((insight) => (
+                    <div
+                      key={insight.insight_id}
+                      className="flex items-center gap-3 py-2"
+                    >
+                      <svg className="h-5 w-5 shrink-0 text-text-brand-tertiary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="min-w-0 flex-1 break-words text-sm font-medium text-text-primary-900">{insight.title}</span>
+                      <span className="text-xs text-text-quaternary-500">Resolved</span>
+                      <span className="text-xs text-text-quaternary-500">
+                        {new Date(insight.generated_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
         )}
 
         {/* Footer */}
