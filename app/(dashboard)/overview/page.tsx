@@ -287,7 +287,7 @@ export default function OverviewPage() {
   const hasNoInsights = !data || data.insights.length === 0
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-bg-primary">
+    <div className="min-h-screen bg-bg-primary">
       <div className="mx-auto max-w-[1280px] px-4 py-6 md:px-8 md:py-6">
         {/* Header */}
         <div className="mb-8">
@@ -486,7 +486,7 @@ export default function OverviewPage() {
                 <h2 className="mb-4 text-xs font-semibold uppercase tracking-wide text-text-primary-900">
                   RESOLVED
                 </h2>
-                <div className="rounded-lg border border-border-secondary bg-[#FFFFFF] dark:bg-bg-secondary p-4 space-y-3">
+                <div className="rounded-lg border border-border-secondary bg-bg-secondary-subtle dark:bg-bg-secondary p-4 space-y-3">
                   {resolvedInsights.map((insight) => (
                     <div
                       key={insight.insight_id}
