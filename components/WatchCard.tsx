@@ -16,29 +16,29 @@ interface WatchCardProps {
 // Helper to format value with color coding
 function formatKeyNumber(label: string, value: string | number): { formatted: string; colorClass: string } {
   const lowerLabel = label.toLowerCase()
-  
-  // Money values - dark orange color for WatchCard
+
+  // Standard orange color for WatchCard key numbers (light: #F79009, dark: uses CSS variable)
+  const orangeClass = 'text-[#F79009] dark:text-[#fdba74]'
+
+  // Money values
   if (typeof value === 'number' || (typeof value === 'string' && value.includes('$'))) {
     const numValue = typeof value === 'number' ? value : parseFloat(value.replace(/[^0-9.-]/g, ''))
     if (!isNaN(numValue)) {
       const formatted = typeof value === 'string' ? value : `$${Math.abs(numValue).toLocaleString()}`
-      return { formatted, colorClass: 'text-[#9a3412]' }
+      return { formatted, colorClass: orangeClass }
     }
   }
-  
-  // Days/negative values - dark orange for WatchCard
+
+  // Days/negative values
   if (lowerLabel.includes('day') || lowerLabel.includes('until')) {
     const numValue = typeof value === 'number' ? value : parseFloat(String(value).replace(/[^0-9.-]/g, ''))
     if (!isNaN(numValue) && numValue < 0) {
-      return { formatted: String(value), colorClass: 'text-red-500' }
+      return { formatted: String(value), colorClass: 'text-red-500 dark:text-red-400' }
     }
-    if (!isNaN(numValue) && numValue <= 14) {
-      return { formatted: String(value), colorClass: 'text-[#9a3412]' }
-    }
-    return { formatted: String(value), colorClass: 'text-[#9a3412]' }
+    return { formatted: String(value), colorClass: orangeClass }
   }
-  
-  return { formatted: String(value), colorClass: 'text-[#9a3412]' }
+
+  return { formatted: String(value), colorClass: orangeClass }
 }
 
 export default function WatchCard({
@@ -51,13 +51,13 @@ export default function WatchCard({
   isLoading = false,
 }: WatchCardProps) {
   // Extract timeframe from supporting numbers (e.g., "Days until tight ~12")
-  const timeframe = insight.supporting_numbers.find(n => 
+  const timeframe = insight.supporting_numbers.find(n =>
     n.label.toLowerCase().includes('day') || n.label.toLowerCase().includes('timeframe')
   )
 
   // Extract financial detail badge (e.g., "+$2,400 vs average")
-  const financialDetail = insight.supporting_numbers.find(n => 
-    n.label.toLowerCase().includes('vs') || 
+  const financialDetail = insight.supporting_numbers.find(n =>
+    n.label.toLowerCase().includes('vs') ||
     n.label.toLowerCase().includes('average') ||
     n.label.toLowerCase().includes('change') ||
     n.label.toLowerCase().includes('difference')
@@ -114,31 +114,31 @@ export default function WatchCard({
               {insight.confidence_level === 'high' ? 'High' : insight.confidence_level === 'medium' ? 'Medium' : 'Low'} confidence
             </span>
           </div>
-          
+
           {/* Title */}
           <h3 className="mb-1 break-words text-base font-semibold text-text-primary-900">{insight.title}</h3>
-          
+
           {/* Generated Date */}
-          <p className="mb-2 text-xs text-text-quaternary-500">
+          {/* <p className="mb-2 text-xs text-text-quaternary-500">
             {formatDateWithAt(insight.generated_at)}
-          </p>
-          
+          </p> */}
+
           {/* Financial Detail Badge */}
           {financialDetail && (
             <div className="mb-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-bg-warning-tag dark:bg-bg-warning-tag border border-bg-warning-input dark:border-bg-warning-input px-2.5 py-0.5 text-xs font-medium text-[#9a3412] dark:text-text-warning-dark">
                 <span>$</span>
-                <span>{typeof financialDetail.value === 'number' 
+                <span>{typeof financialDetail.value === 'number'
                   ? `${financialDetail.value >= 0 ? '+' : ''}$${Math.abs(financialDetail.value).toLocaleString()} vs average`
                   : `${financialDetail.value} vs average`}
                 </span>
               </span>
             </div>
           )}
-          
+
           {/* Summary */}
           <p className="mb-3 break-words text-sm leading-relaxed text-text-secondary-700">{insight.summary}</p>
-          
+
           {/* Suggested Action Box - Figma shows orange/coral box */}
           {suggestedAction && !isExpanded && (
             <div className="mb-3 rounded-md bg-bg-warning-action dark:bg-bg-warning-action border border-bg-warning-input dark:border-bg-warning-input p-3">
@@ -146,12 +146,12 @@ export default function WatchCard({
               <p className="text-sm text-[#9a3412] dark:text-[#fdba74]">{suggestedAction}</p>
             </div>
           )}
-          
+
           {/* Bottom Row - How we worked this out + Resolve button */}
           <div className="flex items-center justify-between mt-3">
             <button
               onClick={onExpand}
-              className="flex items-center gap-1 text-sm text-[#FABE6C] hover:underline cursor-pointer"
+              className="flex items-center gap-1 text-sm font-semibold text-[#F79009] hover:underline cursor-pointer"
             >
               <svg className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -167,7 +167,7 @@ export default function WatchCard({
             </button>
           </div>
         </div>
-        
+
         {/* Right Side - Timeframe only */}
         <div className="flex flex-col items-end gap-2">
           {timeframe && (
@@ -225,7 +225,7 @@ export default function WatchCard({
               {inputsUsed.map((input, i) => (
                 <span
                   key={i}
-                  className="rounded-md border border-bg-warning-input dark:border-bg-warning-input bg-bg-warning-input dark:bg-bg-warning-input px-2.5 py-1 text-xs font-medium text-[#9a3412] dark:text-text-warning-dark"
+                  className="rounded-full border border-[#F79009] bg-transparent px-3 py-1 text-xs font-medium text-[#9a3412] dark:text-text-warning-dark"
                 >
                   {input}
                 </span>
@@ -239,13 +239,13 @@ export default function WatchCard({
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-primary-900">
                 KEY NUMBERS
               </h4>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="flex flex-wrap gap-8">
                 {insight.supporting_numbers.map((num, i) => {
                   const { formatted, colorClass } = formatKeyNumber(num.label, num.value)
                   return (
                     <div key={i}>
                       <div className="text-xs text-text-quaternary-500">{num.label}</div>
-                      <div className={`text-sm font-semibold ${colorClass}`}>{formatted}</div>
+                      <div className={`text-xl font-bold ${colorClass}`}>{formatted}</div>
                     </div>
                   )
                 })}

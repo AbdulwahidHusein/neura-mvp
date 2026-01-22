@@ -254,16 +254,20 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
 
 
       <div className="bg-bg-primary rounded-tl-2xl rounded-bl-2xl rounded-tr-xl rounded-br-xl border border-brand-solid p-6">
-        {/* Badges */}
-        <div className="flex items-center gap-2 mb-6">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${grade.badgeClass}`}>
-            {grade.label}
-          </span>
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-utility-gray-100 text-text-secondary-700">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        {/* Header Row - Icon + Title on left, Health Status on right */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            {/* Chart Icon */}
+            <svg className="w-5 h-5 text-text-brand-tertiary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            {confidence.label}
+            <span className="text-sm font-medium uppercase tracking-wide text-text-secondary-700">
+              BUSINESS HEALTH SCORE
+            </span>
+          </div>
+          {/* Health Status Badge - Right aligned */}
+          <span className={`px-3 py-1 rounded-full text-[13px] font-medium ${grade.badgeClass}`}>
+            {grade.label}
           </span>
         </div>
 
@@ -276,7 +280,7 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
         </div>
 
         {/* Description */}
-        <p className="text-sm text-text-secondary-700 mb-8 max-w-2xl">
+        <p className="text-sm text-text-secondary-700 mb-8">
           {grade.description}
         </p>
 
@@ -322,6 +326,13 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 text-xs text-text-quaternary-500">
             <span>Updated daily</span>
+            {/* Confidence Badge */}
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-border-secondary text-text-secondary-700">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7.74998 3.75V2.25L9.24998 0.75L9.74998 1.75L10.75 2.25L9.24998 3.75H7.74998ZM7.74998 3.75L5.74999 5.74997M10.75 5.75C10.75 8.51142 8.51142 10.75 5.75 10.75C2.98858 10.75 0.75 8.51142 0.75 5.75C0.75 2.98858 2.98858 0.75 5.75 0.75M8.25 5.75C8.25 7.13071 7.13071 8.25 5.75 8.25C4.36929 8.25 3.25 7.13071 3.25 5.75C3.25 4.36929 4.36929 3.25 5.75 3.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {confidence.label}
+            </span>
           </div>
           <button
             onClick={() => setShowDetails(!showDetails)}
@@ -440,18 +451,18 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
 
             {/* How we worked this out (Collapsible Footer) */}
             <details className="group mt-8">
-              <summary className="flex items-center text-teal-700 font-medium cursor-pointer list-none select-none">
+              <summary className="flex items-center text-text-brand-tertiary-600 font-medium cursor-pointer list-none select-none">
                 <svg className="w-5 h-5 mr-2 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
                 How we worked this out
               </summary>
 
-              <div className="mt-4 p-6 bg-utility-gray-50 rounded-xl border border-border-secondary">
+              <div className="mt-4 p-6 bg-bg-secondary-subtle dark:bg-bg-secondary rounded-xl border border-border-secondary">
                 {/* FORMULA */}
                 <div className="mb-6">
                   <h4 className="text-xs font-semibold uppercase tracking-wide text-text-secondary-500 mb-2">FORMULA</h4>
-                  <div className="inline-block bg-white border border-border-secondary rounded-md px-3 py-1.5 text-sm text-text-secondary-700 font-medium shadow-sm">
+                  <div className="inline-block bg-bg-primary border border-border-secondary rounded-md px-3 py-1.5 text-sm text-text-secondary-700 font-medium shadow-sm">
                     Runway = Current Cash ÷ Average Monthly Outflows
                   </div>
                 </div>
@@ -466,7 +477,7 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
                       "Recurring expenses",
                       "Payroll schedule"
                     ].map((input, i) => (
-                      <span key={i} className="bg-white border border-border-secondary rounded-md px-3 py-1 text-sm text-text-secondary-700 shadow-sm">
+                      <span key={i} className="bg-bg-primary border border-border-secondary rounded-md px-3 py-1 text-sm text-text-secondary-700 shadow-sm">
                         {input}
                       </span>
                     ))}
@@ -509,4 +520,3 @@ export default function HealthScoreCard({ data, isLoading, onRefresh }: HealthSc
     </>
   )
 }
-

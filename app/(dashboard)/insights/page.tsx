@@ -13,11 +13,11 @@ import OKCard from '@/components/OKCard'
 export default function InsightsPage() {
   const { user, loading: authLoading } = useAuth()
   const { showToast } = useToast()
-  
-  const { 
-    insights, 
-    pagination, 
-    isLoading, 
+
+  const {
+    insights,
+    pagination,
+    isLoading,
     currentPage,
     severityFilter,
     statusFilter,
@@ -26,7 +26,7 @@ export default function InsightsPage() {
     setSeverityFilter,
     setStatusFilter,
   } = useInsightsStore()
-  
+
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null)
   const [feedbackModal, setFeedbackModal] = useState<{ isOpen: boolean; insightId: string; isPositive: boolean }>({
     isOpen: false,
@@ -122,38 +122,53 @@ export default function InsightsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0a0a0a] p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl">
+    <div className="min-h-screen bg-bg-primary">
+      <div className="mx-auto max-w-[1280px] px-4 py-6 md:px-8 md:py-6">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-text-primary-900">All Insights</h1>
-          <p className="mt-1 text-sm text-text-secondary-700">
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-8 w-1 rounded-full bg-text-brand-tertiary-600" />
+            <h1 className="text-display-md text-text-primary-900 font-bold">All Insights</h1>
+          </div>
+          <p className="text-sm text-text-quaternary-500 ml-4">
             {pagination.total} {pagination.total === 1 ? 'insight' : 'insights'} total
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="mb-6 flex flex-wrap gap-3">
-          <select
-            value={severityFilter}
-            onChange={(e) => setSeverityFilter(e.target.value)}
-            className="rounded-md border border-border-primary bg-bg-primary px-3 py-2 text-sm text-text-primary-900 focus:border-text-brand-tertiary-600 focus:outline-none focus:ring-1 focus:ring-text-brand-tertiary-600"
-          >
-            <option value="all">All Severities</option>
-            <option value="high">High (WATCH)</option>
-            <option value="medium">Medium (OK)</option>
-            <option value="low">Low</option>
-          </select>
+        {/* Filters Row */}
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          {/* Severity Filter */}
+          <div className="relative group">
+            <select
+              value={severityFilter}
+              onChange={(e) => setSeverityFilter(e.target.value)}
+              className="appearance-none rounded-full border border-border-secondary bg-bg-secondary-subtle dark:bg-bg-secondary pl-4 pr-10 py-2 text-sm font-medium text-text-primary-900 cursor-pointer hover:border-text-brand-tertiary-600 focus:border-text-brand-tertiary-600 focus:outline-none focus:ring-2 focus:ring-text-brand-tertiary-600/20 transition-all"
+            >
+              <option value="all">All Severities</option>
+              <option value="high">High (WATCH)</option>
+              <option value="medium">Medium (OK)</option>
+              <option value="low">Low</option>
+            </select>
+            <svg className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-quaternary-500 pointer-events-none group-hover:text-text-brand-tertiary-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-md border border-border-primary bg-bg-primary px-3 py-2 text-sm text-text-primary-900 focus:border-text-brand-tertiary-600 focus:outline-none focus:ring-1 focus:ring-text-brand-tertiary-600"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="resolved">Resolved</option>
-          </select>
+          {/* Status Filter */}
+          <div className="relative group">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="appearance-none rounded-full border border-border-secondary bg-bg-secondary-subtle dark:bg-bg-secondary pl-4 pr-10 py-2 text-sm font-medium text-text-primary-900 cursor-pointer hover:border-text-brand-tertiary-600 focus:border-text-brand-tertiary-600 focus:outline-none focus:ring-2 focus:ring-text-brand-tertiary-600/20 transition-all"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="resolved">Resolved</option>
+            </select>
+            <svg className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-quaternary-500 pointer-events-none group-hover:text-text-brand-tertiary-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
 
         {/* Insights List - ordered by recency (most recent first) */}
@@ -199,7 +214,7 @@ export default function InsightsPage() {
             >
               Previous
             </button>
-            
+
             <div className="flex items-center gap-1">
               {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
                 let pageNum: number
@@ -212,23 +227,22 @@ export default function InsightsPage() {
                 } else {
                   pageNum = currentPage - 2 + i
                 }
-                
+
                 return (
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
-                    className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                      pageNum === currentPage
-                        ? 'bg-bg-brand-solid text-text-white'
-                        : 'border border-border-primary bg-bg-primary text-text-primary-900 hover:bg-bg-secondary'
-                    }`}
+                    className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${pageNum === currentPage
+                      ? 'bg-bg-brand-solid text-text-white'
+                      : 'border border-border-primary bg-bg-primary text-text-primary-900 hover:bg-bg-secondary'
+                      }`}
                   >
                     {pageNum}
                   </button>
                 )
               })}
             </div>
-            
+
             <button
               onClick={() => setPage(currentPage + 1)}
               disabled={currentPage === pagination.total_pages}

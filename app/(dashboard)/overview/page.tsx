@@ -11,6 +11,7 @@ import XeroConnectModal from '@/components/XeroConnectModal'
 import InsightGenerationModal from '@/components/InsightGenerationModal'
 import InsightFeedbackModal from '@/components/InsightFeedbackModal'
 import { DashboardSkeleton } from '@/components/DashboardSkeleton'
+import { DashboardError } from '@/components/DashboardError'
 import WatchCard from '@/components/WatchCard'
 import OKCard from '@/components/OKCard'
 import HealthScoreCard from '@/components/HealthScoreCard'
@@ -123,11 +124,11 @@ export default function OverviewPage() {
   const handleResolve = async (insightId: string) => {
     if (actionLoadingId) return // Prevent multiple simultaneous actions
     setActionLoadingId(insightId)
-    
+
     // Optimistic update
     updateInsight(insightId, { is_marked_done: true })
     setExpandedCardId(null)
-    
+
     try {
       await apiRequest(`/api/insights/${insightId}`, {
         method: 'PATCH',
@@ -146,10 +147,10 @@ export default function OverviewPage() {
   const handleGotIt = async (insightId: string) => {
     if (actionLoadingId) return // Prevent multiple simultaneous actions
     setActionLoadingId(insightId)
-    
+
     // Optimistic update
     updateInsight(insightId, { is_acknowledged: true })
-    
+
     try {
       await apiRequest(`/api/insights/${insightId}`, {
         method: 'PATCH',
@@ -281,6 +282,18 @@ export default function OverviewPage() {
 
   if (!user) {
     return null // Middleware will redirect
+  }
+
+  // Show error state if there's an error and no data
+  if (error && !data) {
+    return (
+      <div className="min-h-screen bg-bg-primary">
+        <DashboardError
+          onRetry={() => fetchOverview(true)}
+          supportLink={settings?.support_link || undefined}
+        />
+      </div>
+    )
   }
 
   // Check if we have no insights
@@ -494,11 +507,11 @@ export default function OverviewPage() {
                     >
                       <svg className="h-4 w-4 shrink-0" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <g clipPath="url(#clip0_472_401)">
-                          <path d="M14.6667 7.3904V8.00373C14.6659 9.44135 14.2004 10.8402 13.3396 11.9916C12.4788 13.1431 11.2689 13.9854 9.89028 14.393C8.51166 14.8006 7.03821 14.7517 5.68969 14.2535C4.34116 13.7552 3.18981 12.8345 2.40735 11.6284C1.62488 10.4224 1.25323 8.99578 1.34783 7.56128C1.44242 6.12678 1.99818 4.76129 2.93223 3.66845C3.86628 2.57561 5.12856 1.81399 6.53083 1.49717C7.9331 1.18034 9.40022 1.32529 10.7134 1.9104M14.6667 2.66659L8.00004 9.33992L6.00004 7.33992" stroke="#17B26A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M14.6667 7.3904V8.00373C14.6659 9.44135 14.2004 10.8402 13.3396 11.9916C12.4788 13.1431 11.2689 13.9854 9.89028 14.393C8.51166 14.8006 7.03821 14.7517 5.68969 14.2535C4.34116 13.7552 3.18981 12.8345 2.40735 11.6284C1.62488 10.4224 1.25323 8.99578 1.34783 7.56128C1.44242 6.12678 1.99818 4.76129 2.93223 3.66845C3.86628 2.57561 5.12856 1.81399 6.53083 1.49717C7.9331 1.18034 9.40022 1.32529 10.7134 1.9104M14.6667 2.66659L8.00004 9.33992L6.00004 7.33992" stroke="#17B26A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </g>
                         <defs>
                           <clipPath id="clip0_472_401">
-                            <rect width="16" height="16" fill="white"/>
+                            <rect width="16" height="16" fill="white" />
                           </clipPath>
                         </defs>
                       </svg>

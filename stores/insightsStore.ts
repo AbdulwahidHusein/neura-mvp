@@ -14,6 +14,9 @@ interface InsightsResponse {
   calculated_at: string | null
 }
 
+// Cache TTL in milliseconds (5 minutes)
+const CACHE_TTL = 5 * 60 * 1000
+
 interface InsightsStore {
   insights: Insight[]
   pagination: Pagination
@@ -22,8 +25,9 @@ interface InsightsStore {
   currentPage: number
   severityFilter: string
   statusFilter: string
-  
-  fetchInsights: (page?: number, severity?: string) => Promise<void>
+  lastFetched: number | null
+
+  fetchInsights: (forceRefresh?: boolean) => Promise<void>
   setPage: (page: number) => void
   setSeverityFilter: (severity: string) => void
   setStatusFilter: (status: string) => void
@@ -38,55 +42,65 @@ export const useInsightsStore = create<InsightsStore>((set, get) => ({
   currentPage: 1,
   severityFilter: 'all',
   statusFilter: 'all',
+  lastFetched: null,
 
-  fetchInsights: async (page?: number, severity?: string) => {
-    const currentPage = page ?? get().currentPage
-    const severityFilter = severity ?? get().severityFilter
-    
+  fetchInsights: async (forceRefresh = false) => {
+    const state = get()
+
+    // Return cached data if still valid and not forcing refresh
+    if (!forceRefresh && state.insights.length > 0 && state.lastFetched) {
+      const age = Date.now() - state.lastFetched
+      if (age < CACHE_TTL) {
+        return // Use cached data
+      }
+    }
+
     set({ isLoading: true, error: null })
     try {
       const { apiRequest } = await import('@/lib/api/client')
-      
-      // Build query params - fetch 10 per page from backend
+
+      // Build query params
       const params = new URLSearchParams()
-      params.set('page', String(currentPage))
+      params.set('page', String(state.currentPage))
       params.set('limit', '10')
-      if (severityFilter !== 'all') {
-        params.set('severity', severityFilter)
+      if (state.severityFilter !== 'all') {
+        params.set('severity', state.severityFilter)
       }
-      
+
       const response = await apiRequest<InsightsResponse>(`/api/insights/?${params.toString()}`)
-      set({ 
-        insights: response.insights, 
+      set({
+        insights: response.insights,
         pagination: response.pagination,
-        currentPage,
-        isLoading: false 
+        isLoading: false,
+        lastFetched: Date.now(),
       })
     } catch (err) {
-      set({ 
-        error: err instanceof Error ? err.message : 'Failed to load insights', 
-        isLoading: false 
+      set({
+        error: err instanceof Error ? err.message : 'Failed to load insights',
+        isLoading: false
       })
     }
   },
 
   setPage: (page: number) => {
-    set({ currentPage: page })
-    get().fetchInsights(page)
+    set({ currentPage: page, lastFetched: null }) // Invalidate cache
+    get().fetchInsights(true)
   },
 
   setSeverityFilter: (severity: string) => {
-    set({ severityFilter: severity, currentPage: 1 })
-    get().fetchInsights(1, severity)
+    set({ severityFilter: severity, currentPage: 1, lastFetched: null }) // Invalidate cache
+    get().fetchInsights(true)
   },
 
   setStatusFilter: (status: string) => {
     set({ statusFilter: status })
   },
 
-  clearInsights: () => set({ 
-    insights: [], 
+  clearInsights: () => set({
+    insights: [],
     pagination: { total: 0, page: 1, limit: 10, total_pages: 0 },
     currentPage: 1,
+    lastFetched: null,
   }),
 }))
+

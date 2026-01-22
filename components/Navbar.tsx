@@ -5,13 +5,27 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/context/AuthContext'
+import { useEffect, useRef } from 'react'
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme()
-  const { user, isAdmin } = useAuth()
+  const { user, isAdmin, signOut } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setUserDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleSettingsClick = () => {
     router.push('/settings')
@@ -47,38 +61,24 @@ export default function Navbar() {
 
         {/* Desktop - Navigation Links */}
         <div className="hidden items-center gap-6 md:flex">
-            <Link
-              href="/overview"
-              className={`text-sm font-medium transition-colors hover:text-text-brand-tertiary-600 cursor-pointer ${
-                pathname === '/overview' 
-                  ? 'text-text-brand-tertiary-600 font-semibold' 
-                  : 'text-text-primary-900'
+          <Link
+            href="/overview"
+            className={`text-sm font-medium transition-colors hover:text-text-brand-tertiary-600 cursor-pointer ${pathname === '/overview'
+                ? 'text-text-brand-tertiary-600 font-semibold'
+                : 'text-text-primary-900'
               }`}
-            >
-              Overview
-            </Link>
-            <Link
-              href="/insights"
-              className={`text-sm font-medium transition-colors hover:text-text-brand-tertiary-600 cursor-pointer ${
-                pathname === '/insights' 
-                  ? 'text-text-brand-tertiary-600 font-semibold' 
-                  : 'text-text-primary-900'
+          >
+            Overview
+          </Link>
+          <Link
+            href="/insights"
+            className={`text-sm font-medium transition-colors hover:text-text-brand-tertiary-600 cursor-pointer ${pathname === '/insights'
+                ? 'text-text-brand-tertiary-600 font-semibold'
+                : 'text-text-primary-900'
               }`}
-            >
-              Insights
-            </Link>
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className={`text-sm font-medium transition-colors hover:text-text-brand-tertiary-600 cursor-pointer ${
-                  pathname === '/admin' 
-                    ? 'text-text-brand-tertiary-600 font-semibold' 
-                    : 'text-text-primary-900'
-                }`}
-              >
-                Admin
-              </Link>
-            )}
+          >
+            Insights
+          </Link>
         </div>
 
         {/* Desktop - Right Side Icons */}
@@ -150,27 +150,82 @@ export default function Navbar() {
             </svg>
           </button>
 
-          {/* User Profile Icon */}
-          <button
-            onClick={handleProfileClick}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border-secondary bg-bg-primary text-text-primary-900 transition-colors hover:bg-bg-secondary cursor-pointer"
-            aria-label="User profile"
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+          {/* User Profile Icon with Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border-secondary bg-bg-primary text-text-primary-900 transition-colors hover:bg-bg-secondary cursor-pointer"
+              aria-label="User menu"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-          </button>
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            </button>
+
+            {/* User Dropdown Menu */}
+            {userDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border-secondary bg-bg-primary shadow-lg py-1 z-50">
+                {/* Settings */}
+                <button
+                  onClick={() => {
+                    router.push('/settings')
+                    setUserDropdownOpen(false)
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text-primary-900 hover:bg-bg-secondary transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Settings
+                </button>
+
+                {/* Admin - only for admins */}
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      router.push('/admin')
+                      setUserDropdownOpen(false)
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text-primary-900 hover:bg-bg-secondary transition-colors"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Admin
+                  </button>
+                )}
+
+                {/* Divider */}
+                <div className="my-1 border-t border-border-secondary" />
+
+                {/* Logout */}
+                <button
+                  onClick={() => {
+                    signOut()
+                    setUserDropdownOpen(false)
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-bg-secondary transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Log out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Mobile - Hamburger Menu */}
@@ -224,22 +279,20 @@ export default function Navbar() {
             <Link
               href="/overview"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-bg-secondary ${
-                pathname === '/overview' 
-                  ? 'text-text-brand-tertiary-600 bg-bg-secondary font-semibold' 
+              className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-bg-secondary ${pathname === '/overview'
+                  ? 'text-text-brand-tertiary-600 bg-bg-secondary font-semibold'
                   : 'text-text-primary-900'
-              }`}
+                }`}
             >
               <span>Overview</span>
             </Link>
             <Link
               href="/insights"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-bg-secondary ${
-                pathname === '/insights' 
-                  ? 'text-text-brand-tertiary-600 bg-bg-secondary font-semibold' 
+              className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-bg-secondary ${pathname === '/insights'
+                  ? 'text-text-brand-tertiary-600 bg-bg-secondary font-semibold'
                   : 'text-text-primary-900'
-              }`}
+                }`}
             >
               <span>Insights</span>
             </Link>
@@ -247,11 +300,10 @@ export default function Navbar() {
               <Link
                 href="/admin"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-bg-secondary ${
-                  pathname === '/admin' 
-                    ? 'text-text-brand-tertiary-600 bg-bg-secondary font-semibold' 
+                className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-bg-secondary ${pathname === '/admin'
+                    ? 'text-text-brand-tertiary-600 bg-bg-secondary font-semibold'
                     : 'text-text-primary-900'
-                }`}
+                  }`}
               >
                 <span>Admin</span>
               </Link>
