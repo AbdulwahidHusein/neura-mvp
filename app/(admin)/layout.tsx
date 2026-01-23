@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Skeleton } from '@/components/Skeleton'
-import Link from 'next/link'
+import Navbar from '@/components/Navbar'
 
 export default function AdminLayout({
   children,
@@ -47,27 +47,9 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-bg-primary">
-      {/* Admin Navigation Bar */}
-      <nav className="border-b border-border-secondary bg-bg-primary">
-        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-8">
-              <Link href="/admin" className="text-lg font-semibold text-text-primary-900">
-                Neura Admin
-              </Link>
-            </div>
-            <Link
-              href="/overview"
-              className="text-sm text-text-quaternary-500 hover:text-text-secondary-700 transition-colors"
-            >
-              Back to App
-            </Link>
-          </div>
-        </div>
-      </nav>
-      
+      <Navbar />
       {/* Main Content */}
-      <main className="mx-auto max-w-[1280px] px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-[1280px] px-4 py-6 md:px-8 md:py-6">
         {children}
       </main>
     </div>

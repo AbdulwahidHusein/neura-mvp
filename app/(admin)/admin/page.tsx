@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useAdminStore, OrganizationSummary, FeedbackItem, UserSummary } from '@/stores/adminStore'
 import { Skeleton } from '@/components/Skeleton'
 
@@ -88,7 +89,7 @@ function FeedbackRow({ feedback }: { feedback: FeedbackItem }) {
               <div><p className="text-xs font-semibold text-text-quaternary-500 uppercase mb-1">Comment</p>{feedback.comment ? <p className="text-sm text-text-secondary-700 bg-bg-primary rounded-lg p-3 border border-border-secondary">{feedback.comment}</p> : <p className="text-sm text-text-quaternary-500 italic">No comment</p>}</div>
               <div className="flex gap-6 pt-2 border-t border-border-secondary text-xs text-text-tertiary-600">
                 <span>ID: {feedback.insight_id}</span>
-                <span>Org: {feedback.organization_id}</span>
+                <span>Org: {feedback.organization_name}</span>
               </div>
             </div>
           </td>
@@ -140,6 +141,28 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Back to overview */}
+      <Link
+        href="/overview"
+        className="inline-flex items-center gap-2 text-sm text-text-quaternary-500 hover:text-text-primary-900 transition-colors cursor-pointer"
+      >
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Back to overview
+      </Link>
+
       <div>
         <h1 className="text-display-xs font-bold text-text-primary-900">Admin Dashboard</h1>
         <p className="text-text-quaternary-500 mt-1">Platform overview and management</p>

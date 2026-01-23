@@ -84,13 +84,17 @@ export default function InsightGenerationModal({
         // Stop polling if completed or failed
         if (response.sync_status === 'COMPLETED') {
           // Validate that this completion is from AFTER we triggered
+          // Both timestamps are in UTC milliseconds for safe comparison
           let isFreshCompletion = false
           
           if (response.updated_at) {
+            // Parse ISO string to UTC milliseconds (handles timezone correctly)
             const statusUpdatedAt = new Date(response.updated_at).getTime()
+            // Compare with trigger timestamp (also UTC milliseconds)
             isFreshCompletion = statusUpdatedAt >= triggerTimestampRef.current - 1000
           } else {
-            isFreshCompletion = true
+            // No timestamp means we can't verify freshness - treat as stale
+            isFreshCompletion = false
           }
           
           if (isFreshCompletion) {
@@ -162,13 +166,19 @@ export default function InsightGenerationModal({
 
     const currentStep = stepMap[status.sync_step || ''] || 0
 
+    // Check if completion is fresh (from after we triggered)
+    // Both timestamps are in UTC milliseconds for safe comparison
+    const isFreshCompletion = status.sync_status === 'COMPLETED' && status.updated_at && 
+      new Date(status.updated_at).getTime() >= triggerTimestampRef.current - 1000
+
     // If status is IN_PROGRESS and we're on step 1 (CONNECTING), show as active
     // This handles the optimistic initial state
     if (status.sync_status === 'IN_PROGRESS' && currentStep === 0 && stepNumber === 1) {
       return 'active'
     }
 
-    if (stepNumber < currentStep || status.sync_status === 'COMPLETED') {
+    // Only mark all steps completed if it's a fresh completion
+    if (stepNumber < currentStep || isFreshCompletion) {
       return 'completed'
     }
     if (stepNumber === currentStep && status.sync_status === 'IN_PROGRESS') {

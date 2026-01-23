@@ -60,24 +60,39 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop - Navigation Links */}
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden items-center gap-4 md:flex">
           <Link
             href="/overview"
-            className={`text-sm font-medium transition-colors hover:text-text-brand-tertiary-600 cursor-pointer ${pathname === '/overview'
-                ? 'text-text-brand-tertiary-600 font-semibold'
-                : 'text-text-primary-900'
-              }`}
+            className="relative flex items-center gap-1.5 px-2 py-1.5 text-sm font-medium transition-all cursor-pointer group"
           >
-            Overview
+            {/* Circle with shine/dot icon for Overview */}
+            <svg className={`h-4 w-4 ${pathname === '/overview' ? 'text-text-brand-tertiary-600' : 'text-text-primary-900 group-hover:text-text-brand-tertiary-600'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="9" strokeWidth={2} />
+              <circle cx="9" cy="9" r="2" fill="currentColor" stroke="none" />
+            </svg>
+            <span className={pathname === '/overview' ? 'text-text-brand-tertiary-600' : 'text-text-primary-900 group-hover:text-text-brand-tertiary-600'}>
+              Overview
+            </span>
+            {/* Gradient underline for active state */}
+            {pathname === '/overview' && (
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-3/4 bg-gradient-to-r from-transparent via-text-brand-tertiary-600 to-transparent" />
+            )}
           </Link>
           <Link
             href="/insights"
-            className={`text-sm font-medium transition-colors hover:text-text-brand-tertiary-600 cursor-pointer ${pathname === '/insights'
-                ? 'text-text-brand-tertiary-600 font-semibold'
-                : 'text-text-primary-900'
-              }`}
+            className="relative flex items-center gap-1.5 px-2 py-1.5 text-sm font-medium transition-all cursor-pointer group"
           >
-            Insights
+            {/* Lightbulb icon for Insights */}
+            <svg className={`h-4 w-4 ${pathname === '/insights' ? 'text-text-brand-tertiary-600' : 'text-text-primary-900 group-hover:text-text-brand-tertiary-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            <span className={pathname === '/insights' ? 'text-text-brand-tertiary-600' : 'text-text-primary-900 group-hover:text-text-brand-tertiary-600'}>
+              Insights
+            </span>
+            {/* Gradient underline for active state */}
+            {pathname === '/insights' && (
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-3/4 bg-gradient-to-r from-transparent via-text-brand-tertiary-600 to-transparent" />
+            )}
           </Link>
         </div>
 
@@ -120,34 +135,6 @@ export default function Navbar() {
                 />
               </svg>
             )}
-          </button>
-
-          {/* Settings Icon */}
-          <button
-            onClick={handleSettingsClick}
-            className="flex h-10 w-10 items-center justify-center rounded-md text-text-primary-900 transition-colors hover:bg-bg-secondary cursor-pointer"
-            aria-label="Settings"
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
           </button>
 
           {/* User Profile Icon with Dropdown */}
@@ -280,20 +267,29 @@ export default function Navbar() {
               href="/overview"
               onClick={() => setMobileMenuOpen(false)}
               className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-bg-secondary ${pathname === '/overview'
-                  ? 'text-text-brand-tertiary-600 bg-bg-secondary font-semibold'
-                  : 'text-text-primary-900'
+                ? 'text-text-brand-tertiary-600 bg-bg-secondary font-semibold'
+                : 'text-text-primary-900'
                 }`}
             >
+              {/* Circle with shine icon for Overview */}
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="9" strokeWidth={2} />
+                <circle cx="9" cy="9" r="2" fill="currentColor" stroke="none" />
+              </svg>
               <span>Overview</span>
             </Link>
             <Link
               href="/insights"
               onClick={() => setMobileMenuOpen(false)}
               className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-bg-secondary ${pathname === '/insights'
-                  ? 'text-text-brand-tertiary-600 bg-bg-secondary font-semibold'
-                  : 'text-text-primary-900'
+                ? 'text-text-brand-tertiary-600 bg-bg-secondary font-semibold'
+                : 'text-text-primary-900'
                 }`}
             >
+              {/* Lightbulb icon for Insights */}
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
               <span>Insights</span>
             </Link>
             {isAdmin && (
@@ -301,8 +297,8 @@ export default function Navbar() {
                 href="/admin"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-bg-secondary ${pathname === '/admin'
-                    ? 'text-text-brand-tertiary-600 bg-bg-secondary font-semibold'
-                    : 'text-text-primary-900'
+                  ? 'text-text-brand-tertiary-600 bg-bg-secondary font-semibold'
+                  : 'text-text-primary-900'
                   }`}
               >
                 <span>Admin</span>

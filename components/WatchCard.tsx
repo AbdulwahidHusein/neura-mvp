@@ -245,7 +245,7 @@ export default function WatchCard({
                   return (
                     <div key={i}>
                       <div className="text-xs text-text-quaternary-500">{num.label}</div>
-                      <div className={`text-xl font-bold ${colorClass}`}>{formatted}</div>
+                      <div className={`text-2xl font-bold ${colorClass}`}>{formatted}</div>
                     </div>
                   )
                 })}

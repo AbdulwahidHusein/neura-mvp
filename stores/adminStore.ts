@@ -29,6 +29,7 @@ export interface FeedbackItem {
   comment: string | null
   user_id: string
   organization_id: string
+  organization_name: string
   created_at: string
 }
 
@@ -51,15 +52,15 @@ export interface UserSummary {
 interface AdminStore {
   // Stats (lightweight, fetch once)
   stats: AdminDashboardStats | null
-  
+
   // Paginated data
   organizations: { items: OrganizationSummary[]; total: number; loaded: boolean }
   feedback: { items: FeedbackItem[]; total: number; loaded: boolean; stats: OverallFeedbackStats | null }
   users: { items: UserSummary[]; total: number; loaded: boolean }
-  
+
   // Loading states
   isLoading: { stats: boolean; orgs: boolean; feedback: boolean; users: boolean }
-  
+
   // Actions
   fetchStats: () => Promise<void>
   fetchOrganizations: (limit?: number, offset?: number) => Promise<void>
