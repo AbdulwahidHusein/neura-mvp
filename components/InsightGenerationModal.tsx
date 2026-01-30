@@ -33,15 +33,15 @@ export default function InsightGenerationModal({
     updated_at: new Date().toISOString(),
   }))
   const [notifyWhenReady, setNotifyWhenReady] = useState(false)
-  
+
   // Use refs to prevent race conditions and stale closures
   const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isMountedRef = useRef(true)
   const pollCounterRef = useRef(0)
-  
+
   // Use provided trigger timestamp or current time as fallback
   const triggerTimestampRef = useRef(triggeredAt || Date.now())
-  
+
   // Update trigger timestamp when prop changes
   useEffect(() => {
     if (triggeredAt) {
@@ -57,7 +57,7 @@ export default function InsightGenerationModal({
 
   useEffect(() => {
     isMountedRef.current = true
-    
+
     if (!isOpen) {
       // Reset state when modal closes
       setStatus({
@@ -72,12 +72,12 @@ export default function InsightGenerationModal({
 
     const pollStatus = async () => {
       if (!isMountedRef.current) return
-      
+
       try {
         const response = await apiRequest<SyncStatusResponse>('/api/insights/status')
-        
+
         if (!isMountedRef.current) return
-        
+
         setStatus(response)
         pollCounterRef.current++
 
@@ -86,7 +86,7 @@ export default function InsightGenerationModal({
           // Validate that this completion is from AFTER we triggered
           // Both timestamps are in UTC milliseconds for safe comparison
           let isFreshCompletion = false
-          
+
           if (response.updated_at) {
             // Parse ISO string to UTC milliseconds (handles timezone correctly)
             const statusUpdatedAt = new Date(response.updated_at).getTime()
@@ -96,7 +96,7 @@ export default function InsightGenerationModal({
             // No timestamp means we can't verify freshness - treat as stale
             isFreshCompletion = false
           }
-          
+
           if (isFreshCompletion) {
             // Clear any pending timeout
             if (pollTimeoutRef.current) {
@@ -168,7 +168,7 @@ export default function InsightGenerationModal({
 
     // Check if completion is fresh (from after we triggered)
     // Both timestamps are in UTC milliseconds for safe comparison
-    const isFreshCompletion = status.sync_status === 'COMPLETED' && status.updated_at && 
+    const isFreshCompletion = status.sync_status === 'COMPLETED' && status.updated_at &&
       new Date(status.updated_at).getTime() >= triggerTimestampRef.current - 1000
 
     // If status is IN_PROGRESS and we're on step 1 (CONNECTING), show as active
@@ -243,7 +243,7 @@ export default function InsightGenerationModal({
           <div className="mb-6 rounded-md bg-bg-error-secondary p-4">
             <p className="text-sm font-medium text-text-primary-900">Generation failed</p>
             <p className="mt-1 text-sm text-text-secondary-700">
-              {status.last_sync_error || 'An error occurred while generating insights.'}
+              We encountered an issue generating your insights. Please try again or contact support if the problem persists.
             </p>
           </div>
         )}
@@ -394,11 +394,10 @@ export default function InsightGenerationModal({
           </p>
           <button
             onClick={handleNotifyClick}
-            className={`w-full rounded-md px-4 py-3 text-sm font-semibold text-white transition-colors ${
-              notifyWhenReady
-                ? 'bg-text-brand-tertiary-600/80 cursor-default'
-                : 'bg-text-brand-tertiary-600 hover:bg-text-brand-tertiary-700'
-            }`}
+            className={`w-full rounded-md px-4 py-3 text-sm font-semibold text-white transition-colors ${notifyWhenReady
+              ? 'bg-text-brand-tertiary-600/80 cursor-default'
+              : 'bg-text-brand-tertiary-600 hover:bg-text-brand-tertiary-700'
+              }`}
             disabled={notifyWhenReady || status?.sync_status === 'COMPLETED'}
           >
             <span className="flex items-center justify-center gap-2">
